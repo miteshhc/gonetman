@@ -19,21 +19,24 @@ func NewSettings() *tview.Form {
     Flex.AddItem(settingsForm, 0, 1, false)
 
     hostname, err := app.NMSettings.GetPropertyHostname()
-
-    if err != nil {
-        helpers.ErrorModal(err, MainMenu, app.App)
-        return settingsForm
-    }
-
-    isWirelessEnabledProperty, err := app.NMInstance.GetPropertyWirelessEnabled()
-
     if err != nil {
         helpers.ErrorModal(err, MainMenu, app.App)
         return settingsForm
     }
 
     isWirelessHWEnabledProperty, err := app.NMInstance.GetPropertyWirelessHardwareEnabled()
+    if err != nil {
+        helpers.ErrorModal(err, MainMenu, app.App)
+        return settingsForm
+    }
 
+    isWirelessEnabledProperty, err := app.NMInstance.GetPropertyWirelessEnabled()
+    if err != nil {
+        helpers.ErrorModal(err, MainMenu, app.App)
+        return settingsForm
+    }
+
+    isNMEnabledProperty, err := app.NMInstance.GetPropertyNetworkingEnabled()
     if err != nil {
         helpers.ErrorModal(err, MainMenu, app.App)
         return settingsForm
@@ -44,22 +47,33 @@ func NewSettings() *tview.Form {
         isWirelessHWEnabled = "Enabled"
     }
 
-    isWirelessEnabled := int8(1)
+    isWirelessEnabled := 1
     if isWirelessEnabledProperty {
         isWirelessEnabled = 0
     }
 
+    isNMEnabled := 1
+    if isNMEnabledProperty {
+        isNMEnabled = 0
+    }
+
     settingsForm.SetBorder(true).SetTitle("Settings")
     settingsForm.AddInputField("Hostname: ", hostname, 18, nil, nil)
+    settingsForm.AddDropDown("Network Manager: ", []string{"Enable", "Disable"}, isNMEnabled, func(option string, optionIndex int) {
+        if optionIndex == 0 {
+            isNMEnabledProperty = true
+        } else {
+            isNMEnabledProperty = false
+        }
+    })
     settingsForm.AddTextView("Wireless HW: ", isWirelessHWEnabled, 30, 1, false, false)
-    settingsForm.AddDropDown("Wireless: ", []string{"Enable", "Disable"}, int(isWirelessEnabled), func(option string, optionIndex int) {
+    settingsForm.AddDropDown("Wireless: ", []string{"Enable", "Disable"}, isWirelessEnabled, func(option string, optionIndex int) {
         if optionIndex == 0 {
             isWirelessEnabledProperty = true
         } else {
             isWirelessEnabledProperty = false
         }
     })
-
     settingsForm.AddButton("<Back>", func() {
         app.App.SetFocus(MainMenu)
         Flex.RemoveItem(settingsForm)
@@ -94,7 +108,7 @@ func NewSettings() *tview.Form {
     })
 
     settingsForm.AddButton("<OK>", func() {
-        saveSettings(settingsForm, hostname, isWirelessEnabledProperty)
+        saveSettings(settingsForm, hostname, isNMEnabledProperty, isWirelessEnabledProperty)
     })
 
     return settingsForm
@@ -114,6 +128,7 @@ func reload(nmInstance gonetworkmanager.NetworkManager, reloadModal *tview.Modal
 // saveSettings Saves all the changed settings
 func saveSettings(settingsForm *tview.Form,
                 originalHostname string,
+                isNMEnabled bool,
                 isWirelessEnabled bool,
                 ) {
     newHostname := settingsForm.GetFormItem(0).(*tview.InputField).GetText()
@@ -125,12 +140,20 @@ func saveSettings(settingsForm *tview.Form,
         }
     }
 
-    if err := app.NMInstance.SetPropertyWirelessEnabled(isWirelessEnabled); err != nil {
-        helpers.ErrorModal(err, MainMenu, app.App)
-        return
+    if wirelessEnabled, _ := app.NMInstance.GetPropertyWirelessEnabled(); wirelessEnabled != isWirelessEnabled {
+        if err := app.NMInstance.SetPropertyWirelessEnabled(isWirelessEnabled); err != nil {
+            helpers.ErrorModal(err, MainMenu, app.App)
+            return
+        }
     }
 
-    // Return to main menu on success
+    if nmEnabled, _ := app.NMInstance.GetPropertyNetworkingEnabled(); nmEnabled != isNMEnabled {
+        if err := app.NMInstance.Enable(isNMEnabled); err != nil {
+            helpers.ErrorModal(err, MainMenu, app.App)
+            return
+        }
+    }
+
     Flex.RemoveItem(settingsForm)
     app.App.SetFocus(MainMenu)
 }
