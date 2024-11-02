@@ -24,6 +24,12 @@ func NewSettings() *tview.Form {
         return settingsForm
     }
 
+    isNMEnabledProperty, err := app.NMInstance.GetPropertyNetworkingEnabled()
+    if err != nil {
+        helpers.ErrorModal(err, MainMenu, app.App)
+        return settingsForm
+    }
+
     isWirelessHWEnabledProperty, err := app.NMInstance.GetPropertyWirelessHardwareEnabled()
     if err != nil {
         helpers.ErrorModal(err, MainMenu, app.App)
@@ -36,10 +42,21 @@ func NewSettings() *tview.Form {
         return settingsForm
     }
 
-    isNMEnabledProperty, err := app.NMInstance.GetPropertyNetworkingEnabled()
+    isWWanHWEnabledProperty, err := app.NMInstance.GetPropertyWwanHardwareEnabled()
     if err != nil {
         helpers.ErrorModal(err, MainMenu, app.App)
         return settingsForm
+    }
+
+    isWWanEnabledProperty, err := app.NMInstance.GetPropertyWwanEnabled()
+    if err != nil {
+        helpers.ErrorModal(err, MainMenu, app.App)
+        return settingsForm
+    }
+
+    isNMEnabled := 1
+    if isNMEnabledProperty {
+        isNMEnabled = 0
     }
 
     isWirelessHWEnabled := "Disabled"
@@ -52,9 +69,14 @@ func NewSettings() *tview.Form {
         isWirelessEnabled = 0
     }
 
-    isNMEnabled := 1
-    if isNMEnabledProperty {
-        isNMEnabled = 0
+    isWWanHWEnabled := "Disabled"
+    if isWWanHWEnabledProperty {
+        isWWanHWEnabled = "Enabled"
+    }
+
+    isWWanEnabled := "Disabled"
+    if isWWanEnabledProperty {
+        isWWanEnabled = "Enabled"
     }
 
     settingsForm.SetBorder(true).SetTitle("Settings")
@@ -74,6 +96,8 @@ func NewSettings() *tview.Form {
             isWirelessEnabledProperty = false
         }
     })
+    settingsForm.AddTextView("WWan HW: ", isWWanHWEnabled, 30, 1, false, false)
+    settingsForm.AddTextView("WWan: ", isWWanEnabled, 30, 1, false, false)
     settingsForm.AddButton("<Back>", func() {
         app.App.SetFocus(MainMenu)
         Flex.RemoveItem(settingsForm)
