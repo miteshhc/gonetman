@@ -5,7 +5,6 @@ import (
 	"github.com/miteshhc/gonetman/app"
 	"github.com/miteshhc/gonetman/helpers"
 
-	// "github.com/Wifx/gonetworkmanager/v2"
 	"github.com/rivo/tview"
 )
 
@@ -35,7 +34,7 @@ func NewEditConnection() *tview.List {
         connectionsList.AddItem(
             connectionID,
             "",
-            helpers.ConvertToChar(i),
+            helpers.ConvertToRune(i),
             func() {
                 connectionSubMenu(connectionSettings, connectionsList)
             })
@@ -64,7 +63,7 @@ func NewEditConnection() *tview.List {
     return connectionsList
 }
 
-// connectionSubMenu create submenu of given connection dynamically
+// connectionSubMenu Create submenu of given connection dynamically
 func connectionSubMenu(connectionSettings gonetworkmanager.ConnectionSettings, connectionsList *tview.List) {
     connectionForm := tview.NewForm()
     Flex.AddItem(connectionForm, 0, 3, false)

@@ -25,13 +25,16 @@ func init() {
     }
 }
 
-// NewMainMenu creates main menu and draws it to the screen
+// NewMainMenu Creates main menu and draws it to the screen
 func NewMainMenu() *tview.List {
     MainMenu.AddItem(
         "Activate Connection",
         "Activate/Deactivate one of the available connections",
         'a',
-        nil,
+        func() {
+            activateConnection := NewActivateConnection()
+            app.App.SetFocus(activateConnection)
+        },
     ).AddItem(
         "Edit Connection(s)",
         "Manage saved connections",

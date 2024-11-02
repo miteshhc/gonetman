@@ -13,25 +13,59 @@ import (
     TODO: Add stuff from AccessPoint
 */
 
-// NewSettings creates Settings submenu
+// NewSettings Creates Settings submenu
 func NewSettings() *tview.Form {
+    settingsForm := tview.NewForm()
+    Flex.AddItem(settingsForm, 0, 1, false)
+
     hostname, err := app.NMSettings.GetPropertyHostname()
+
     if err != nil {
-        panic("Failed to get hostname: " + err.Error())
+        helpers.ErrorModal(err, MainMenu, app.App)
+        return settingsForm
     }
 
-    form := tview.NewForm()
-    Flex.AddItem(form, 0, 1, false)
+    isWirelessEnabledProperty, err := app.NMInstance.GetPropertyWirelessEnabled()
 
-    form.SetBorder(true).SetTitle("Settings")
-    form.AddInputField("Hostname: ", hostname, 40, nil, nil)
+    if err != nil {
+        helpers.ErrorModal(err, MainMenu, app.App)
+        return settingsForm
+    }
 
-    form.AddButton("<Back>", func() {
-        app.App.SetFocus(MainMenu)
-        Flex.RemoveItem(form)
+    isWirelessHWEnabledProperty, err := app.NMInstance.GetPropertyWirelessHardwareEnabled()
+
+    if err != nil {
+        helpers.ErrorModal(err, MainMenu, app.App)
+        return settingsForm
+    }
+
+    isWirelessHWEnabled := "Disabled"
+    if isWirelessHWEnabledProperty {
+        isWirelessHWEnabled = "Enabled"
+    }
+
+    isWirelessEnabled := int8(1)
+    if isWirelessEnabledProperty {
+        isWirelessEnabled = 0
+    }
+
+    settingsForm.SetBorder(true).SetTitle("Settings")
+    settingsForm.AddInputField("Hostname: ", hostname, 18, nil, nil)
+    settingsForm.AddTextView("Wireless HW: ", isWirelessHWEnabled, 30, 1, false, false)
+    settingsForm.AddDropDown("Wireless: ", []string{"Enable", "Disable"}, int(isWirelessEnabled), func(option string, optionIndex int) {
+        if optionIndex == 0 {
+            isWirelessEnabledProperty = true
+        } else {
+            isWirelessEnabledProperty = false
+        }
     })
 
-    form.AddButton("<Reload>", func() {
+    settingsForm.AddButton("<Back>", func() {
+        app.App.SetFocus(MainMenu)
+        Flex.RemoveItem(settingsForm)
+    })
+
+    settingsForm.AddButton("<Reload>", func() {
         reloadModal := tview.NewModal()
 
         reloadModal.SetText("What do you want to reload?").
@@ -51,24 +85,19 @@ func NewSettings() *tview.Form {
                 case 4:
                     reload(app.NMInstance, reloadModal, consts.ReloadDNSPlugin)
                 default:
-                    app.App.SetRoot(Flex, true).SetFocus(form)
+                    app.App.SetRoot(Flex, true).SetFocus(settingsForm)
                 }
-                app.App.SetRoot(Flex, true).SetFocus(form)
+                app.App.SetRoot(Flex, true).SetFocus(settingsForm)
             })
 
         app.App.SetRoot(reloadModal, true).SetFocus(reloadModal)
     })
 
-    form.AddButton("<OK>", func() {
-        newHostname := form.GetFormItem(0).(*tview.InputField).GetText()
-        if err := app.NMSettings.SaveHostname(newHostname); err != nil {
-            helpers.ErrorModal(err, MainMenu, app.App)
-        } else {
-            app.App.SetFocus(MainMenu)
-        }
+    settingsForm.AddButton("<OK>", func() {
+        saveSettings(settingsForm, hostname, isWirelessEnabledProperty)
     })
 
-    return form
+    return settingsForm
 }
 
 // reload Reloads settings as per provided flag
@@ -80,4 +109,28 @@ func reload(nmInstance gonetworkmanager.NetworkManager, reloadModal *tview.Modal
     } else {
         app.App.SetFocus(reloadModal)
     }
+}
+
+// saveSettings Saves all the changed settings
+func saveSettings(settingsForm *tview.Form,
+                originalHostname string,
+                isWirelessEnabled bool,
+                ) {
+    newHostname := settingsForm.GetFormItem(0).(*tview.InputField).GetText()
+    
+    if newHostname != originalHostname {
+        if err := app.NMSettings.SaveHostname(newHostname); err != nil {
+            helpers.ErrorModal(err, MainMenu, app.App)
+            return
+        }
+    }
+
+    if err := app.NMInstance.SetPropertyWirelessEnabled(isWirelessEnabled); err != nil {
+        helpers.ErrorModal(err, MainMenu, app.App)
+        return
+    }
+
+    // Return to main menu on success
+    Flex.RemoveItem(settingsForm)
+    app.App.SetFocus(MainMenu)
 }
