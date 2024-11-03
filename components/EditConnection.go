@@ -3,7 +3,7 @@ package components
 import (
 	"github.com/Wifx/gonetworkmanager/v2"
 	"github.com/miteshhc/gonetman/app"
-	"github.com/miteshhc/gonetman/helpers"
+	// "github.com/miteshhc/gonetman/helpers"
 
 	"github.com/rivo/tview"
 )
@@ -34,7 +34,7 @@ func NewEditConnection() *tview.List {
         connectionsList.AddItem(
             connectionID,
             "",
-            helpers.ConvertToRune(i),
+            ConvertToRune(i),
             func() {
                 connectionSubMenu(connectionSettings, connectionsList)
             })
@@ -69,7 +69,7 @@ func connectionSubMenu(connectionSettings gonetworkmanager.ConnectionSettings, c
     Flex.AddItem(connectionForm, 0, 3, false)
 
     timestamp, _ := connectionSettings["connection"]["timestamp"].(uint64)
-    lastConnected := helpers.GetLocalTime(timestamp)
+    lastConnected := GetLocalTime(timestamp)
 
     id, ok := connectionSettings["connection"]["id"].(string)
     if !ok {

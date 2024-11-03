@@ -3,7 +3,6 @@ package components
 import (
 	"github.com/miteshhc/gonetman/app"
 	"github.com/miteshhc/gonetman/consts"
-	"github.com/miteshhc/gonetman/helpers"
 
 	"github.com/Wifx/gonetworkmanager/v2"
 	"github.com/rivo/tview"
@@ -20,37 +19,37 @@ func NewSettings() *tview.Form {
 
     hostname, err := app.NMSettings.GetPropertyHostname()
     if err != nil {
-        helpers.ErrorModal(err, MainMenu, app.App)
+        ErrorModal(err, MainMenu)
         return settingsForm
     }
 
     isNMEnabledProperty, err := app.NMInstance.GetPropertyNetworkingEnabled()
     if err != nil {
-        helpers.ErrorModal(err, MainMenu, app.App)
+        ErrorModal(err, MainMenu)
         return settingsForm
     }
 
     isWirelessHWEnabledProperty, err := app.NMInstance.GetPropertyWirelessHardwareEnabled()
     if err != nil {
-        helpers.ErrorModal(err, MainMenu, app.App)
+        ErrorModal(err, MainMenu)
         return settingsForm
     }
 
     isWirelessEnabledProperty, err := app.NMInstance.GetPropertyWirelessEnabled()
     if err != nil {
-        helpers.ErrorModal(err, MainMenu, app.App)
+        ErrorModal(err, MainMenu)
         return settingsForm
     }
 
     isWWanHWEnabledProperty, err := app.NMInstance.GetPropertyWwanHardwareEnabled()
     if err != nil {
-        helpers.ErrorModal(err, MainMenu, app.App)
+        ErrorModal(err, MainMenu)
         return settingsForm
     }
 
     isWWanEnabledProperty, err := app.NMInstance.GetPropertyWwanEnabled()
     if err != nil {
-        helpers.ErrorModal(err, MainMenu, app.App)
+        ErrorModal(err, MainMenu)
         return settingsForm
     }
 
@@ -131,6 +130,7 @@ func NewSettings() *tview.Form {
         app.App.SetRoot(reloadModal, true).SetFocus(reloadModal)
     })
 
+
     settingsForm.AddButton("<OK>", func() {
         saveSettings(settingsForm, hostname, isNMEnabledProperty, isWirelessEnabledProperty)
     })
@@ -143,7 +143,7 @@ func reload(nmInstance gonetworkmanager.NetworkManager, reloadModal *tview.Modal
     err := nmInstance.Reload(flag)
 
     if err != nil {
-        helpers.ErrorModal(err, reloadModal, app.App)
+        ErrorModal(err, reloadModal)
     } else {
         app.App.SetFocus(reloadModal)
     }
@@ -159,21 +159,21 @@ func saveSettings(settingsForm *tview.Form,
     
     if newHostname != originalHostname {
         if err := app.NMSettings.SaveHostname(newHostname); err != nil {
-            helpers.ErrorModal(err, MainMenu, app.App)
+            ErrorModal(err, MainMenu)
             return
         }
     }
 
     if wirelessEnabled, _ := app.NMInstance.GetPropertyWirelessEnabled(); wirelessEnabled != isWirelessEnabled {
         if err := app.NMInstance.SetPropertyWirelessEnabled(isWirelessEnabled); err != nil {
-            helpers.ErrorModal(err, MainMenu, app.App)
+            ErrorModal(err, MainMenu)
             return
         }
     }
 
     if nmEnabled, _ := app.NMInstance.GetPropertyNetworkingEnabled(); nmEnabled != isNMEnabled {
         if err := app.NMInstance.Enable(isNMEnabled); err != nil {
-            helpers.ErrorModal(err, MainMenu, app.App)
+            ErrorModal(err, MainMenu)
             return
         }
     }

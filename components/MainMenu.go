@@ -5,7 +5,6 @@ import (
 	"github.com/miteshhc/gonetman/app"
 
 	"github.com/rivo/tview"
-    "github.com/miteshhc/gonetman/helpers"
 )
 
 var MainMenu = tview.NewList()
@@ -15,13 +14,13 @@ func init() {
     app.NMInstance, err = gonetworkmanager.NewNetworkManager()
 
     if err != nil {
-        helpers.ErrorModal(err, MainMenu, app.App)
+        ErrorModal(err, MainMenu)
     }
 
     app.NMSettings, err = gonetworkmanager.NewSettings()
 
     if err != nil {
-        helpers.ErrorModal(err, MainMenu, app.App)
+        ErrorModal(err, MainMenu)
     }
 }
 
